@@ -1,52 +1,35 @@
-const CACHE_NAME = 'firebase-movies-cache-v1';
-
-const urlsToCache = [
-    '/',
-    '/manifest.webmanifest',
-    '/assets/cat.png',
-    '/android-chrome-192x192.png',
-    '/android-chrome-512x512.png',
-    '/favicon-32x32.png',
-    '/favicon-16x16.png',
-    '/offline.html',  // Adicione esta linha
+const cacheName = "pwa-conf-v1";
+const staticAssets = [
+    './',
+    './index.html',
+    './index.js',
+    './manifest.webmanifest',
+    './assets/cat.png',
+    './android-chrome-192x192.png',
+    './android-chrome-512x512.png',
+    './favicon-32x32.png',
+    './favicon-16x16.png',
+    './offline.html',
 ];
 
-// Instalação do Service Worker
-self.addEventListener('install', event => {
-    event.waitUntil(
-        caches.open(CACHE_NAME)
-            .then(cache => {
-                console.log('Opened cache');
-                return cache.addAll(urlsToCache);
-            })
-    );
+self.addEventListener("install", async (event) => {
+    const cache = await caches.open(cacheName);
+    await cache.addAll(staticAssets);
 });
 
-// Busca no cache ou na rede
-self.addEventListener('fetch', event => {
-    event.respondWith(
-        caches.match(event.request)
-            .then(response => {
-                // Se a resposta não for encontrada no cache, retornar uma página offline
-                return response || fetch(event.request).catch(() => {
-                    return caches.match('/offline.html');
-                });
-            })
-    );
-}); 
-
-// Atualizando o Service Worker
-self.addEventListener('activate', event => {
-    const cacheWhitelist = [CACHE_NAME];
-    event.waitUntil(
-        caches.keys().then(cacheNames => {
-            return Promise.all(
-                cacheNames.map(cacheName => {
-                    if (cacheWhitelist.indexOf(cacheName) === -1) {
-                        return caches.delete(cacheName);
-                    }
-                })
-            );
-        })
-    );
+self.addEventListener("fetch", (event) => {
+    const req = event.request;
+    event.respondWith(networkFirst(req));
 });
+
+async function networkFirst(req) {
+    const cache = await caches.open(cacheName);
+    try {
+        const response = await fetch(req);
+        await cache.put(req, response.clone());
+        return response;
+    } catch (error) {
+        return await cache.match('./offline.html');
+    }
+}
+
