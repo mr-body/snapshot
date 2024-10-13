@@ -9,27 +9,20 @@ const staticAssets = [
     './android-chrome-512x512.png',
     './favicon-32x32.png',
     './favicon-16x16.png',
-    './offline.html',
+    './offline.html',  // Adicione esta linha
 ];
 
 self.addEventListener("install", async (event) => {
     const cache = await caches.open(cacheName);
     await cache.addAll(staticAssets);
 });
-
 self.addEventListener("fetch", (event) => {
     const req = event.request;
-    event.respondWith(networkFirst(req));
+    event.respondWith(cacheFirst(req));
 });
 
-async function networkFirst(req) {
+async function cacheFirst(req) {
     const cache = await caches.open(cacheName);
-    try {
-        const response = await fetch(req);
-        await cache.put(req, response.clone());
-        return response;
-    } catch (error) {
-        return await cache.match('./offline.html');
-    }
+    const cachedResponse = await cache.match(req);
+    return cachedResponse || fetch(req);
 }
-
