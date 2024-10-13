@@ -1,6 +1,8 @@
 {
     "name": "firebase-movies",
     "short_name": "firebase-movies",
+    "description": "Movie app with Firebase",
+    "start_url": ".",
     "icons": [
         {
             "src": "/android-chrome-192x192.png",
@@ -13,7 +15,10 @@
             "type": "image/png"
         }
     ],
+    "dir": "auto",
     "theme_color": "#EEF0F4",
     "background_color": "#EEF0F4",
+    "lang": "en",
+    "orientation": "natural",
     "display": "standalone"
 }
