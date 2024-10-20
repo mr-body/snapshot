@@ -38,6 +38,12 @@
 <body>
     <h1>Novidades</h1>
 
+    <!-- Campo de pesquisa -->
+    <div>
+        <label for="search">Pesquisar:</label>
+        <input type="text" id="search" placeholder="Pesquisar novidades e comentários">
+    </div>
+
     <div>
         <label for="titlo">Título:</label>
         <input type="text" id="titlo" required>
@@ -84,6 +90,8 @@
         const dscInput = document.getElementById("dscricao");
         const addButtonEl = document.getElementById("add-button");
         const novidadesListEl = document.getElementById("novidades-list");
+
+        const searchInput = document.getElementById("search");
 
         const comentarioUsuarioInput = document.getElementById("comentario-usuario");
         const comentarioTextoInput = document.getElementById("comentario-texto");
@@ -218,6 +226,21 @@
         // Fechar modal
         closeModalButton.addEventListener("click", () => {
             commentModal.style.display = "none"; // Fecha o modal
+        });
+
+        // Filtrar novidades e comentários
+        searchInput.addEventListener("input", () => {
+            const searchTerm = searchInput.value.toLowerCase();
+            novidadesListEl.innerHTML = ""; // Limpa a lista antes de filtrar
+            novidades.forEach(novidadeData => {
+                const titleMatches = novidadeData.titulo.toLowerCase().includes(searchTerm);
+                const descriptionMatches = novidadeData.descricao.toLowerCase().includes(searchTerm);
+                
+                // Verifica se a novidade ou seus comentários correspondem
+                if (titleMatches || descriptionMatches) {
+                    displayNovidade(novidadeData);
+                }
+            });
         });
     </script>
 </body>
