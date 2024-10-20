@@ -1,27 +1,43 @@
 <!doctype html>
 <html>
-    <head><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.css">
-        <title>Add to Cart - site with Firebase</title>
-        <link rel="stylesheet" href="./style/style.css">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <link rel="preconnect" href="https://fonts.googleapis.com">
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@300&display=swap" rel="stylesheet">
-        <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
 
-        <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
-        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
-        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
-        <link rel="manifest" href="/site.webmanifest">
-    </head>
-    <body>
-        <div class="container">
-            <img src="assets/cat.png">
-            <input type="text" id="input-field" placeholder="Bread">
-            <button id="add-button">Add to cart</button>
-            <ol id="list-items"></ol>
-        </div>
-        <script src="index.js" type="module"></script>
-        <script src="./service-worker.js"></script>
-    </body>
+<head>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.css">
+    <title>Add to Cart - site with Firebase</title>
+    <link rel="stylesheet" href="./style/style.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@300&display=swap" rel="stylesheet">
+    <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
+
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="manifest" href="/site.webmanifest">
+</head>
+
+<body>
+    <h1>Cadastro de Usuário</h1>
+
+    <div>
+        <label for="nome">Nome:</label>
+        <input type="text" id="nome" required>
+    </div>
+    <div>
+        <label for="localizacao">Localização:</label>
+        <input type="text" id="localizacao" required>
+    </div>
+    <button id="add-button">Adicionar</button>
+
+    <h2>Pesquisar Usuário:</h2>
+    <input type="text" id="search-input" placeholder="Pesquise pelo nome ou localização">
+
+    <h2>Usuários Cadastrados:</h2>
+    <ul id="list-items"></ul>
+
+    <script src="index.js" type="module"></script>
+    <script src="./service-worker.js"></script>
+</body>
+
 </html>
