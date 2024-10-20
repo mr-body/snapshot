@@ -1,43 +1,225 @@
 <!doctype html>
-<html>
+<html lang="pt-BR">
 
 <head>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.css">
-    <title>Add to Cart - site with Firebase</title>
+    <title>Adicionar Novidade - site com Firebase</title>
     <link rel="stylesheet" href="./style/style.css">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@300&display=swap" rel="stylesheet">
-    <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
+    <style>
+        /* Estilos para o modal */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.4);
+            padding-top: 60px;
+        }
 
-    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
-    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
-    <link rel="manifest" href="/site.webmanifest">
+        .modal-content {
+            background-color: #fefefe;
+            margin: 5% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+        }
+
+        .descricao {
+            display: none; /* Inicialmente oculto */
+        }
+    </style>
 </head>
 
 <body>
-    <h1>Cadastro de Usuário</h1>
+    <h1>Novidades</h1>
 
     <div>
-        <label for="nome">Nome:</label>
-        <input type="text" id="nome" required>
+        <label for="titlo">Título:</label>
+        <input type="text" id="titlo" required>
     </div>
     <div>
-        <label for="localizacao">Localização:</label>
-        <input type="text" id="localizacao" required>
+        <label for="dscricao">Descrição (Markdown):</label>
+        <textarea id="dscricao" required></textarea>
     </div>
-    <button id="add-button">Adicionar</button>
+    <button id="add-button">Criar</button>
 
-    <h2>Pesquisar Usuário:</h2>
-    <input type="text" id="search-input" placeholder="Pesquise pelo nome ou localização">
+    <h2>Lista de Novidades:</h2>
+    <ul id="novidades-list"></ul>
 
-    <h2>Usuários Cadastrados:</h2>
-    <ul id="list-items"></ul>
+    <!-- Modal para Adicionar Comentário -->
+    <div id="comment-modal" class="modal">
+        <div class="modal-content">
+            <span id="close-modal" style="float:right; cursor:pointer;">&times;</span>
+            <h2>Adicionar Comentário</h2>
+            <div>
+                <label for="comentario-usuario">Usuário:</label>
+                <input type="text" id="comentario-usuario" required>
+            </div>
+            <div>
+                <label for="comentario-texto">Comentário:</label>
+                <input type="text" id="comentario-texto" required>
+            </div>
+            <button id="add-comentario-button">Adicionar Comentário</button>
+        </div>
+    </div>
 
-    <script src="index.js" type="module"></script>
-    <script src="./service-worker.js"></script>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-app.js";
+        import { getDatabase, ref, onValue, set, push, remove } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-database.js";
+
+        const firebaseConfig = {
+            databaseURL: "https://luanda-1688e-default-rtdb.firebaseio.com/",
+        }
+
+        const app = initializeApp(firebaseConfig);
+        const database = getDatabase(app);
+        const dbRef = ref(database, "novidades");
+
+        const titloInput = document.getElementById("titlo");
+        const dscInput = document.getElementById("dscricao");
+        const addButtonEl = document.getElementById("add-button");
+        const novidadesListEl = document.getElementById("novidades-list");
+
+        const comentarioUsuarioInput = document.getElementById("comentario-usuario");
+        const comentarioTextoInput = document.getElementById("comentario-texto");
+        const addComentarioButtonEl = document.getElementById("add-comentario-button");
+        const commentModal = document.getElementById("comment-modal");
+        const closeModalButton = document.getElementById("close-modal");
+
+        let novidades = [];
+        let editingKey = null;
+        let currentNovidadeKey = null;
+
+        // Carregar novidades do Firebase
+        onValue(dbRef, (snapshot) => {
+            novidades = [];
+            novidadesListEl.innerHTML = "";
+            snapshot.forEach(novidade => {
+                const novidadeData = { key: novidade.key, ...novidade.val() };
+                novidades.push(novidadeData);
+                displayNovidade(novidadeData);
+            });
+        });
+
+        // Função para exibir novidades
+        function displayNovidade(novidadeData) {
+            const item = document.createElement("li");
+            item.innerHTML = `<strong>${novidadeData.titulo}</strong> - <span class="descricao">${novidadeData.descricao}</span>`;
+
+            // Botão para abrir/fechar descrição
+            const toggleButton = document.createElement("button");
+            toggleButton.textContent = "Ver Descrição";
+            toggleButton.addEventListener("click", () => {
+                const descricao = item.querySelector(".descricao");
+                descricao.style.display = descricao.style.display === "none" ? "block" : "none";
+                toggleButton.textContent = descricao.style.display === "none" ? "Ver Descrição" : "Ocultar Descrição";
+            });
+
+            // Botão para deletar
+            const deleteButton = document.createElement("button");
+            deleteButton.textContent = "Deletar";
+            deleteButton.addEventListener("click", () => {
+                remove(ref(database, `novidades/${novidadeData.key}`));
+            });
+
+            item.appendChild(toggleButton);
+            item.appendChild(deleteButton);
+
+            item.addEventListener("dblclick", () => {
+                currentNovidadeKey = novidadeData.key;
+                commentModal.style.display = "block"; // Abre o modal
+            });
+
+            const editButton = document.createElement("button");
+            editButton.textContent = "Editar";
+            editButton.addEventListener("click", () => {
+                editingKey = novidadeData.key;
+                titloInput.value = novidadeData.titulo;
+                dscInput.value = novidadeData.descricao;
+                addButtonEl.textContent = "Atualizar";
+            });
+
+            const comentariosList = document.createElement("ul");
+            if (novidadeData.comentarios) {
+                Object.entries(novidadeData.comentarios).forEach(([comentarioId, comentario]) => {
+                    const comentarioItem = document.createElement("li");
+                    comentarioItem.textContent = `${comentario.usuario}: ${comentario.texto}`;
+                    comentariosList.appendChild(comentarioItem);
+                });
+            }
+
+            item.appendChild(editButton);
+            item.appendChild(comentariosList);
+            novidadesListEl.appendChild(item);
+        }
+
+        // Adicionar ou atualizar novidade
+        addButtonEl.addEventListener("click", () => {
+            const titlo = titloInput.value;
+            const dsc = dscInput.value;
+
+            if (titlo && dsc) {
+                if (editingKey) {
+                    updateNovidade(editingKey, titlo, dsc);
+                    editingKey = null;
+                    addButtonEl.textContent = "Criar";
+                } else {
+                    insertNovidade(titlo, dsc);
+                }
+                titloInput.value = "";
+                dscInput.value = "";
+            } else {
+                alert("Por favor, preencha todos os campos.");
+            }
+        });
+
+        // Inserir nova novidade
+        function insertNovidade(titlo, dsc) {
+            const novidadeRef = push(dbRef);
+            set(novidadeRef, {
+                titulo: titlo,
+                descricao: dsc,
+                comentarios: {}
+            });
+        }
+
+        // Atualizar novidade
+        function updateNovidade(key, titlo, dsc) {
+            set(ref(database, `novidades/${key}`), {
+                titulo: titlo,
+                descricao: dsc,
+            });
+        }
+
+        // Adicionar comentário
+        addComentarioButtonEl.addEventListener("click", () => {
+            const usuario = comentarioUsuarioInput.value;
+            const texto = comentarioTextoInput.value;
+
+            if (currentNovidadeKey && usuario && texto) {
+                const comentarioRef = push(ref(database, `novidades/${currentNovidadeKey}/comentarios`));
+                set(comentarioRef, {
+                    usuario: usuario,
+                    texto: texto
+                });
+                comentarioUsuarioInput.value = "";
+                comentarioTextoInput.value = "";
+                commentModal.style.display = "none"; // Fecha o modal após adicionar o comentário
+            } else {
+                alert("Preencha todos os campos.");
+            }
+        });
+
+        // Fechar modal
+        closeModalButton.addEventListener("click", () => {
+            commentModal.style.display = "none"; // Fecha o modal
+        });
+    </script>
 </body>
 
 </html>
